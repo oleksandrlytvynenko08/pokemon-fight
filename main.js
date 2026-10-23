@@ -1,91 +1,122 @@
-const $btnKick = document.getElementById('btn-kick');
-const $btnSuperKick = document.getElementById('btn-super-kick');
+const $btnKick = document.getElementById("btn-kick");
+const $btnSuperKick = document.getElementById("btn-super-kick");
+const $logs = document.querySelector("#logs");
 
 function random(num) {
-    return Math.ceil(Math.random() * num);
+  return Math.ceil(Math.random() * num);
+}
+
+function generateLog(firstPerson, secondPerson, count) {
+  const { name: firstName, damageHP, defaultHP } = firstPerson;
+  const { name: secondName } = secondPerson;
+
+  const logs = [
+    `${firstName} вспомнил что-то важное, но неожиданно ${secondName}, не помня себя от испуга, ударил в предплечье врага.`,
+    `${firstName} поперхнулся, и за это ${secondName} с испугу приложил прямой удар коленом в лоб врага.`,
+    `${firstName} забылся, но в это время наглый ${secondName}, приняв волевое решение, неслышно подойдя сзади, ударил.`,
+    `${firstName} пришел в себя, но неожиданно ${secondName} случайно нанес мощнейший удар.`,
+    `${firstName} поперхнулся, но в это время ${secondName} нехотя раздробил кулаком врага.`,
+    `${firstName} удивился, а ${secondName} пошатнувшись влепил подлый удар.`,
+    `${firstName} высморкался, но неожиданно ${secondName} провел дробящий удар.`,
+    `${firstName} пошатнулся, и внезапно наглый ${secondName} беспричинно ударил в ногу противника.`,
+    `${firstName} расстроился, как вдруг, неожиданно ${secondName} случайно влепил стопой в живот соперника.`,
+    `${firstName} пытался что-то сказать, но вдруг, неожиданно ${secondName} со скуки, разбил бровь сопернику.`,
+  ];
+
+  return `${logs[random(logs.length) - 1]} -${count}, [${damageHP}/${defaultHP}]`;
 }
 
 function renderHPLife() {
-    this.elHP.innerText = this.damageHP + ' / ' + this.defaultHP;
+  const { elHP, damageHP, defaultHP } = this;
+  elHP.innerText = `${damageHP} / ${defaultHP}`;
 }
 
 function renderProgressbarHP() {
-    this.elProgressbar.style.width = this.damageHP + '%';
+  const { elProgressbar, damageHP } = this;
+  elProgressbar.style.width = `${damageHP}%`;
 
-    if (this.damageHP > 60) {
-        this.elProgressbar.classList.remove('low', 'critical');
-    } else if (this.damageHP <= 60 && this.damageHP > 20) {
-        this.elProgressbar.classList.add('low');
-        this.elProgressbar.classList.remove('critical');
-    } else {
-        this.elProgressbar.classList.add('critical');
-        this.elProgressbar.classList.remove('low');
-    }
+  if (damageHP > 60) {
+    elProgressbar.classList.remove("low", "critical");
+  } else if (damageHP <= 60 && damageHP > 20) {
+    elProgressbar.classList.add("low");
+    elProgressbar.classList.remove("critical");
+  } else {
+    elProgressbar.classList.add("critical");
+    elProgressbar.classList.remove("low");
+  }
 }
 
 function renderHP() {
-    this.renderHPLife();
-    this.renderProgressbarHP();
+  this.renderHPLife();
+  this.renderProgressbarHP();
 }
 
 function changeHP(count) {
-    if (this.damageHP <= count) {
-        this.damageHP = 0;
-        this.renderHP();
-        alert('Бідний ' + this.name + ' програв бій!');
-        $btnKick.disabled = true;
-        $btnSuperKick.disabled = true;
-    } else {
-        this.damageHP -= count;
-        this.renderHP();
-    }
+  this.damageHP -= count;
+
+  if (this.damageHP < 0) {
+    this.damageHP = 0;
+  }
+
+  this.renderHP();
+
+  const logText = this === enemy ? generateLog(this, character, count) : generateLog(this, enemy, count);
+
+  const $p = document.createElement("p");
+  $p.innerText = logText;
+
+  $logs.insertBefore($p, $logs.children[0]);
+
+  if (this.damageHP === 0) {
+    const { name } = this;
+    alert(`Бідний ${name} програв бій!`);
+    $btnKick.disabled = true;
+    $btnSuperKick.disabled = true;
+  }
 }
 
 const character = {
-    name: 'Pikachu',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-character'),
-    elProgressbar: document.getElementById('progressbar-character'),
-    changeHP: changeHP,
-    renderHP: renderHP,
-    renderHPLife: renderHPLife,
-    renderProgressbarHP: renderProgressbarHP,
+  name: "Pikachu",
+  defaultHP: 100,
+  damageHP: 100,
+  elHP: document.getElementById("health-character"),
+  elProgressbar: document.getElementById("progressbar-character"),
+  changeHP,
+  renderHP,
+  renderHPLife,
+  renderProgressbarHP,
 };
 
 const enemy = {
-    name: 'Charmander',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-enemy'),
-    elProgressbar: document.getElementById('progressbar-enemy'),
-    changeHP: changeHP,
-    renderHP: renderHP,
-    renderHPLife: renderHPLife,
-    renderProgressbarHP: renderProgressbarHP,
+  name: "Charmander",
+  defaultHP: 100,
+  damageHP: 100,
+  elHP: document.getElementById("health-enemy"),
+  elProgressbar: document.getElementById("progressbar-enemy"),
+  changeHP,
+  renderHP,
+  renderHPLife,
+  renderProgressbarHP,
 };
 
 function attack(characterMaxDamage, enemyMaxDamage) {
-    enemy.changeHP(random(enemyMaxDamage));
-    if (enemy.damageHP > 0) {
-        character.changeHP(random(characterMaxDamage));
-    }
+  enemy.changeHP(random(enemyMaxDamage));
+  if (enemy.damageHP > 0) {
+    character.changeHP(random(characterMaxDamage));
+  }
 }
 
-$btnKick.addEventListener('click', function () {
-    console.log('Thunder Jolt!');
-    attack(20, 20);
+$btnKick.addEventListener("click", function () {
+  attack(20, 20);
 });
 
-$btnSuperKick.addEventListener('click', function () {
-    console.log('Electro Ball!');
-    attack(15, 40);
+$btnSuperKick.addEventListener("click", function () {
+  attack(15, 40);
 });
 
 function init() {
-    console.log('Start Game with this!');
-    character.renderHP();
-    enemy.renderHP();
+  character.renderHP();
+  enemy.renderHP();
 }
 
 init();
